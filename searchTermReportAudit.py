@@ -109,10 +109,10 @@ def auditSearchTermReports():
                 csvWriter.writerow(header + settings['searchTermNewColumns'])
                 for row in csvReader:
                     if row and len(row) > 1:
-                        bidMatchType = row[header.index('BidMatchType')]
+                        bidMatchType = row[header.index('Bid match type')]
                         rawKeyword = row[header.index('Keyword')].lower()
                         preppedKeyword = prepKeyword(rawKeyword, bidMatchType)
-                        searchTerm = row[header.index('Search term')].lower().replace(',','')
+                        searchTerm = row[header.index('SearchQuery')].lower().replace(',','')
                         clicks = round(float(row[header.index('Clicks')].lower()), 4)
                         impressions = round(float(row[header.index('Impressions')].lower()), 4)
                         differenceRatio = getDifferenceRatio(rawKeyword, searchTerm, bidMatchType)
