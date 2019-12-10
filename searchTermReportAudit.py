@@ -51,13 +51,13 @@ def prepKeyword(keywordToPrep, bidMatchType):
     else:
         return keywordToPrep.lower()
 
-def getDifferenceRatio(keyword, searchTerm, bidMatchType):
+def getDifferenceRatio(keyword, searchTerm):
     return SequenceMatcher(None, keyword, searchTerm).ratio()
 
-def getWordCountDiff(keyword, searchTerm, bidMatchType):
+def getWordCountDiff(keyword, searchTerm):
     return len(keyword.split(" ")) - len(searchTerm.split(" "))
 
-def getDroppedWords(keyword, searchTerm, bidMatchType):
+def getDroppedWords(keyword, searchTerm):
     droppedWords = []
     for word in keyword.split(" "):
         if word not in searchTerm:
@@ -74,7 +74,7 @@ def findSearchTermHeader(csvReader):
         if all(item in row for item in settings['searchTermHeaders']):
             return row
 
-def acronymCheck(keyword, searchTerm, bidMatchType):
+def acronymCheck(keyword, searchTerm):
     if "".join([item[0] for item in keyword.split(" ") if item]) in searchTerm.split(" "):
         return True
     else:
@@ -115,13 +115,13 @@ def auditSearchTermReports():
                         searchTerm = row[header.index('Search term')].lower().replace(',','')
                         clicks = round(float(row[header.index('Clicks')].lower()), 4)
                         impressions = round(float(row[header.index('Impressions')].lower()), 4)
-                        differenceRatio = getDifferenceRatio(rawKeyword, searchTerm, bidMatchType)
+                        differenceRatio = getDifferenceRatio(rawKeyword, searchTerm)
 
                         if differenceRatio <= diffRatioCeiling:
-                            wordCountDiff = getWordCountDiff(preppedKeyword, searchTerm, bidMatchType)
-                            droppedWords = getDroppedWords(preppedKeyword, searchTerm, bidMatchType)
+                            wordCountDiff = getWordCountDiff(preppedKeyword, searchTerm)
+                            droppedWords = getDroppedWords(preppedKeyword, searchTerm)
                             droppedStopWords = getDroppedStopWords(droppedWords)
-                            acronymDetected = acronymCheck(preppedKeyword, searchTerm, bidMatchType)
+                            acronymDetected = acronymCheck(preppedKeyword, searchTerm)
                             phraseMissing = phraseCheck(rawKeyword, searchTerm) if bidMatchType == 'Phrase' else 'Not Phrase Match'
                             droppedAnchors = bmmAnchorCheck(rawKeyword, searchTerm) if bidMatchType == 'Broad' else 'Not Broad Match'
                             clicksWeighted = clicks / differenceRatio if differenceRatio > 0 else clicks / 0.0001
