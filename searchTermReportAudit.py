@@ -6,7 +6,7 @@ settings = {
     'inputDirectory' : 'input',
     'outputDirectory': 'output',
     'stopWords': ['aboard','about','above','across','after','against','along','amid','among','anti','around','as','at','before','behind','below','beneath','beside','besides','between','beyond','but','by','concerning','considering','despite','down','during','except','excepting','excluding','following','for','from','in','inside','into','like','minus','near','of','off','on','onto','opposite','outside','over','past','per','plus','regarding','round','save','since','than','through','to','toward','towards','under','underneath','unlike','until','up','upon','versus','via','with','within','without'],
-    'searchTermHeaders': ['Search term', 'Keyword', 'BidMatchType'],
+    'searchTermHeaders': ['SearchQuery', 'Keyword', 'Bid match type'],
     'searchTermNewColumns': ['Diff Ratio', 'Clicks Weighted Diff Ratio', 'Impressions Weighted Diff Ratio','Word Count Diff', 'Dropped Words', 'Dropped Stop Word Count', 'Dropped Stop Words', 'Kw Acronym in Search Term', "Phrase Missing", "Dropped BMM Anchor Count", "Dropped BMM Anchors"]
 }
 
@@ -51,13 +51,13 @@ def prepKeyword(keywordToPrep, bidMatchType):
     else:
         return keywordToPrep.lower()
 
-def getDifferenceRatio(keyword, searchTerm):
+def getDifferenceRatio(keyword, searchTerm, bidMatchType):
     return SequenceMatcher(None, keyword, searchTerm).ratio()
 
-def getWordCountDiff(keyword, searchTerm):
+def getWordCountDiff(keyword, searchTerm, bidMatchType):
     return len(keyword.split(" ")) - len(searchTerm.split(" "))
 
-def getDroppedWords(keyword, searchTerm):
+def getDroppedWords(keyword, searchTerm, bidMatchType):
     droppedWords = []
     for word in keyword.split(" "):
         if word not in searchTerm:
@@ -74,7 +74,7 @@ def findSearchTermHeader(csvReader):
         if all(item in row for item in settings['searchTermHeaders']):
             return row
 
-def acronymCheck(keyword, searchTerm):
+def acronymCheck(keyword, searchTerm, bidMatchType):
     if "".join([item[0] for item in keyword.split(" ") if item]) in searchTerm.split(" "):
         return True
     else:
@@ -115,13 +115,13 @@ def auditSearchTermReports():
                         searchTerm = row[header.index('Search term')].lower().replace(',','')
                         clicks = round(float(row[header.index('Clicks')].lower()), 4)
                         impressions = round(float(row[header.index('Impressions')].lower()), 4)
-                        differenceRatio = getDifferenceRatio(rawKeyword, searchTerm)
+                        differenceRatio = getDifferenceRatio(rawKeyword, searchTerm, bidMatchType)
 
                         if differenceRatio <= diffRatioCeiling:
-                            wordCountDiff = getWordCountDiff(preppedKeyword, searchTerm)
-                            droppedWords = getDroppedWords(preppedKeyword, searchTerm)
+                            wordCountDiff = getWordCountDiff(preppedKeyword, searchTerm, bidMatchType)
+                            droppedWords = getDroppedWords(preppedKeyword, searchTerm, bidMatchType)
                             droppedStopWords = getDroppedStopWords(droppedWords)
-                            acronymDetected = acronymCheck(preppedKeyword, searchTerm)
+                            acronymDetected = acronymCheck(preppedKeyword, searchTerm, bidMatchType)
                             phraseMissing = phraseCheck(rawKeyword, searchTerm) if bidMatchType == 'Phrase' else 'Not Phrase Match'
                             droppedAnchors = bmmAnchorCheck(rawKeyword, searchTerm) if bidMatchType == 'Broad' else 'Not Broad Match'
                             clicksWeighted = clicks / differenceRatio if differenceRatio > 0 else clicks / 0.0001
