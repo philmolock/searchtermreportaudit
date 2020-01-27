@@ -6,8 +6,7 @@ settings = {
     'inputDirectory' : 'input',
     'outputDirectory': 'output',
     'stopWords': ['aboard','about','above','across','after','against','along','amid','among','anti','around','as','at','before','behind','below','beneath','beside','besides','between','beyond','but','by','concerning','considering','despite','down','during','except','excepting','excluding','following','for','from','in','inside','into','like','minus','near','of','off','on','onto','opposite','outside','over','past','per','plus','regarding','round','save','since','than','through','to','toward','towards','under','underneath','unlike','until','up','upon','versus','via','with','within','without'],
-    'searchTermHeadersOld': {'Search term', 'Keyword', 'BidMatchType'},
-    'searchTermHeadersNew': {'SearchQuery', 'Keyword', 'Bid match type'},
+    'searchTermHeaders': {'Search term', 'Keyword', 'Bid match type'},
     'searchTermNewColumns': ['Diff Ratio', 'Clicks Weighted Diff Ratio', 'Impressions Weighted Diff Ratio','Word Count Diff', 'Dropped Words', 'Dropped Stop Word Count', 'Dropped Stop Words', 'Kw Acronym in Search Term', "Phrase Missing", "Dropped BMM Anchor Count", "Dropped BMM Anchors"]
 }
 
@@ -73,10 +72,8 @@ def getDroppedStopWords(droppedWords):
 def findSearchTermHeader(csvReader):
     for row in csvReader:
         rowSet = set(row)
-        if rowSet.intersection(settings['searchTermHeadersOld']) == settings['searchTermHeadersOld']:
-            return row, 'old'
-        if rowSet.intersection(settings['searchTermHeadersNew']) == settings['searchTermHeadersNew']:
-            return row, 'new'
+        if rowSet.intersection(settings['searchTermHeaders']) == settings['searchTermHeaders']:
+            return row
 
 def acronymCheck(keyword, searchTerm, bidMatchType):
     if "".join([item[0] for item in keyword.split(" ") if item]) in searchTerm.split(" "):
@@ -108,17 +105,15 @@ def auditSearchTermReports():
             print(f"Auditing.. {settings['inputDirectory']}\\{searchTermReport}")
             csvReader = csv.reader(csvIn)
             with open(f"{settings['outputDirectory']}\\{searchTermReport.split('.csv')[0]} Audited {getDateTimeNow()}.csv", 'w', newline='') as csvOut:
-                header, strVersion = findSearchTermHeader(csvReader)
+                header = findSearchTermHeader(csvReader)
                 csvWriter = csv.writer(csvOut, delimiter=',')
                 csvWriter.writerow(header + settings['searchTermNewColumns'])
                 for row in csvReader:
                     if row and len(row) > 1:
-                        bidMatchTypeVersion = 'BidMatchType' if strVersion == 'old' else 'Bid match type'
-                        searchTermVersion = 'Search term' if strVersion == 'old' else 'SearchQuery'
-                        bidMatchType = row[header.index(bidMatchTypeVersion)]
+                        bidMatchType = row[header.index('Bid match type')]
                         rawKeyword = row[header.index('Keyword')].lower()
                         preppedKeyword = prepKeyword(rawKeyword, bidMatchType)
-                        searchTerm = row[header.index(searchTermVersion)].lower().replace(',','')
+                        searchTerm = row[header.index('Search term')].lower().replace(',','')
                         clicks = round(float(row[header.index('Clicks')].lower()), 4) if row[header.index('Clicks')] != '' else 0
                         impressions = round(float(row[header.index('Impressions')].lower()), 4) if row[header.index('Impressions')] != '' else 0
                         differenceRatio = getDifferenceRatio(rawKeyword, searchTerm, bidMatchType)
